@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>อนุมัติใบลา</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --approve: #10b981;
+      --approve-dark: #059669;
+      --reject: #ef4444;
+      --reject-dark: #dc2626;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    .container { width: 100%; max-width: 440px; }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.3);
+    }
+    .header h1 { font-size: 20px; font-weight: 700; color: var(--text); }
+    .header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+
+    .info-icon {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .info-icon.purple { background: #ede9fe; }
+    .info-icon.blue   { background: #dbeafe; }
+    .info-icon.green  { background: #d1fae5; }
+    .info-icon.amber  { background: #fef3c7; }
+    .info-icon.pink   { background: #fce7f3; }
+
+    .info-label { font-size: 11px; color: var(--muted); line-height: 1; margin-bottom: 3px; }
+    .info-value { font-size: 14px; font-weight: 500; color: var(--text); }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    /* Reason textarea */
+    .reason-section { margin-bottom: 14px; }
+    .reason-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .reason-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-family: 'Prompt', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+      background: var(--card);
+      min-height: 90px;
+    }
+    .reason-textarea:focus { border-color: #6366f1; }
+    .reason-textarea::placeholder { color: #94a3b8; }
+
+    /* Buttons */
+    .btn-group { display: flex; gap: 10px; }
+
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Prompt', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-approve {
+      background: var(--approve);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+    }
+    .btn-approve:hover { background: var(--approve-dark); }
+
+    .btn-reject {
+      background: var(--reject);
+      color: white;
+      box-shadow: 0 4px 14px rgba(239,68,68,0.3);
+    }
+    .btn-reject:hover { background: var(--reject-dark); }
+
+    /* Result screen */
+    .result {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .result-icon { font-size: 64px; margin-bottom: 16px; }
+    .result h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .result p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .result.success h2 { color: var(--approve); }
+    .result.fail h2 { color: var(--reject); }
+
+    /* Loading */
+    .loading { display: none; text-align: center; padding: 16px; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Already done */
+    .already-done {
+      display: none;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px 20px;
+      text-align: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .already-done .icon { font-size: 48px; margin-bottom: 12px; }
+    .already-done h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .already-done p { font-size: 13px; color: var(--muted); }
+
+    /* Error */
+    .error-screen {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .error-screen .icon { font-size: 48px; margin-bottom: 12px; }
+    .error-screen h2 { font-size: 18px; font-weight: 700; color: #ef4444; margin-bottom: 6px; }
+    .error-screen p { font-size: 13px; color: var(--muted); }
+
+    .fade-in { animation: fadeUp 0.35s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- หน้าโหลด -->
+  <div id="screen-loading" class="card" style="text-align:center; padding: 48px 20px;">
+    <div class="spinner" style="margin: 0 auto 16px;"></div>
+    <p style="color: var(--muted); font-size:14px;">กำลังโหลดข้อมูล...</p>
+  </div>
+
+  <!-- หน้าข้อมูล + ปุ่ม -->
+  <div id="screen-main" style="display:none;" class="fade-in">
+    <div class="header">
+      <div class="header-icon">📋</div>
+      <h1>อนุมัติใบลา</h1>
+      <p id="header-sub">บริษัท รับเบอร์ทรี อินดัสทรีส์ จำกัด</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ข้อมูลใบลา</div>
+
+      <div class="info-row">
+        <div class="info-icon purple">👤</div>
+        <div>
+          <div class="info-label">พนักงาน</div>
+          <div class="info-value" id="emp-name">—</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon blue">📝</div>
+        <div>
+          <div class="info-label">ประเภทลา</div>
+          <div class="info-value" id="leave-type">—</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon green">📅</div>
+        <div>
+          <div class="info-label">ช่วงวันที่</div>
+          <div class="info-value" id="leave-dates">—</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon amber">⏱</div>
+        <div>
+          <div class="info-label">จำนวนวัน</div>
+          <div class="info-value" id="leave-days">—</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon pink">💬</div>
+        <div>
+          <div class="info-label">เหตุผล</div>
+          <div class="info-value" id="leave-reason">—</div>
+        </div>
+      </div>
+
+      <div class="info-row" id="row-attachment" style="display:none;">
+        <div class="info-icon blue" style="background:#dbeafe;">📎</div>
+        <div>
+          <div class="info-label">ไฟล์แนบ</div>
+          <div class="info-value" id="leave-attachment">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card reason-section">
+      <label class="reason-label">หมายเหตุจากผู้จัดการ <span style="color:#94a3b8; font-weight:400;">(ถ้ามี)</span></label>
+      <textarea id="manager-note" class="reason-textarea" placeholder="กรอกหมายเหตุหรือเหตุผลในการปฏิเสธ..."></textarea>
+    </div>
+
+    <div id="loading-action" class="loading">
+      <div class="spinner"></div>
+      <p style="font-size:13px; color:var(--muted);">กำลังบันทึก...</p>
+    </div>
+
+    <div class="btn-group" id="btn-group">
+      <button class="btn btn-reject" onclick="doAction('reject')">✗ ปฏิเสธ</button>
+      <button class="btn btn-approve" onclick="doAction('approve')">✓ อนุมัติ</button>
+    </div>
+  </div>
+
+  <!-- ทำไปแล้ว -->
+  <div id="screen-done" class="already-done fade-in">
+    <div class="icon" id="done-icon">✅</div>
+    <h2 id="done-title">ดำเนินการแล้ว</h2>
+    <p id="done-desc">ใบลานี้ถูกดำเนินการไปแล้ว</p>
+  </div>
+
+  <!-- สำเร็จ -->
+  <div id="screen-success" class="card result success fade-in">
+    <div class="result-icon" id="result-icon">✅</div>
+    <h2 id="result-title">อนุมัติแล้ว</h2>
+    <p id="result-desc">บันทึกเรียบร้อย ระบบจะแจ้งพนักงานต่อไป</p>
+  </div>
+
+  <!-- Error -->
+  <div id="screen-error" class="error-screen fade-in">
+    <div class="icon">⚠️</div>
+    <h2>เกิดข้อผิดพลาด</h2>
+    <p id="error-msg">ไม่พบข้อมูลใบลา หรือลิงก์หมดอายุแล้ว</p>
+  </div>
+
+</div>
+
+<script>
+  // =========================================================
+  // ตั้งค่า — เปลี่ยน URL ให้ตรงกับ Apps Script ของคุณ
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwxdhoKm2zp-g2pa3Ad42aS-UVe9MYDF1ptYdo934m2JpWFSkLeyhhVE4lGD8yt6tWj/exec';
+  // =========================================================
+
+  const params = new URLSearchParams(location.search);
+  const leaveId = params.get('id');
+
+  function show(id) {
+    ['screen-loading','screen-main','screen-done','screen-success','screen-error']
+      .forEach(s => document.getElementById(s).style.display = 'none');
+    document.getElementById(id).style.display = id === 'screen-main' ? 'block' : 'flex';
+    if (id === 'screen-done' || id === 'screen-success' || id === 'screen-error') {
+      document.getElementById(id).style.display = 'block';
+    }
+  }
+
+  function parseLocalDate(str) {
+    if (!str) return new Date(NaN);
+    if (str instanceof Date) {
+      let y = str.getFullYear();
+      if (y > 2400) y -= 543;
+      return new Date(y, str.getMonth(), str.getDate());
+    }
+    let s = String(str).trim();
+
+    // Check if it's an ISO datetime string
+    if (s.includes('T')) {
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const bangkokTime = d.getTime() + (7 * 60 * 60 * 1000);
+        const bangkokDate = new Date(bangkokTime);
+        let y = bangkokDate.getUTCFullYear();
+        if (y > 2400) y -= 543;
+        return new Date(y, bangkokDate.getUTCMonth(), bangkokDate.getUTCDate());
+      }
+    }
+
+    // ISO format YYYY-MM-DD
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+      let y = +iso[1];
+      if (y > 2400) y -= 543;
+      return new Date(y, +iso[2]-1, +iso[3]);
+    }
+
+    // Slash format DD/MM/YYYY
+    const slash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (slash) {
+      const part1 = +slash[1];
+      const part2 = +slash[2];
+      let y = +slash[3];
+      if (y > 2400) y -= 543;
+
+      let day = part1;
+      let month = part2;
+      if (month > 12 && day <= 12) {
+        day = part2;
+        month = part1;
+      }
+      return new Date(y, month-1, day);
+    }
+
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      let y = d.getFullYear();
+      if (y > 2400) y -= 543;
+      return new Date(y, d.getMonth(), d.getDate());
+    }
+    return new Date(NaN);
+  }
+
+  function formatDate(str) {
+    if (!str) return '—';
+    const d = parseLocalDate(str);
+    if (isNaN(d.getTime())) return str;
+    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  async function loadLeave() {
+    if (!leaveId) { show('screen-error'); document.getElementById('error-msg').textContent = 'ไม่พบ ID ใบลา'; return; }
+
+    try {
+      const resp = await fetch(WEB_APP_URL + '?action=getData', { redirect: 'follow' });
+      const result = await resp.json();
+      const data = result.data || result;
+      const leaves = data.leaves || [];
+      const leave = leaves.find(l => String(l.id) === String(leaveId));
+
+      if (!leave) { show('screen-error'); document.getElementById('error-msg').textContent = 'ไม่พบใบลา ID: ' + leaveId; return; }
+
+      // ถ้าดำเนินการไปแล้ว
+      if (leave.status === 'อนุมัติแล้ว') {
+        show('screen-done');
+        document.getElementById('done-icon').textContent = '✅';
+        document.getElementById('done-title').textContent = 'อนุมัติแล้ว';
+        document.getElementById('done-desc').textContent = 'ใบลานี้ถูกอนุมัติไปแล้ว โดย ' + (leave.manager_name || '—');
+        return;
+      }
+      if (leave.status === 'ปฏิเสธ') {
+        show('screen-done');
+        document.getElementById('done-icon').textContent = '❌';
+        document.getElementById('done-title').textContent = 'ปฏิเสธแล้ว';
+        document.getElementById('done-desc').textContent = 'ใบลานี้ถูกปฏิเสธไปแล้ว' + (leave.reject_reason ? '\nเหตุผล: ' + leave.reject_reason : '');
+        return;
+      }
+
+      // แสดงข้อมูล
+      document.getElementById('emp-name').textContent = leave.employee_name || '—';
+      document.getElementById('leave-type').textContent = leave.leave_type || '—';
+      document.getElementById('leave-dates').textContent = formatDate(leave.start_date) + ' — ' + formatDate(leave.end_date);
+      // แสดงจำนวนวัน/ชั่วโมงให้ถูกต้องตามประเภทลา
+      function formatLeaveDays(leave) {
+        if (leave.is_half_day === 'hourly') {
+          const t1 = String(leave.hourly_start || '').trim();
+          const t2 = String(leave.hourly_end   || '').trim();
+          if (t1 && t2 && /^\d{1,2}:\d{2}/.test(t1) && /^\d{1,2}:\d{2}/.test(t2)) {
+            const m1 = parseInt(t1.split(':')[0])*60 + parseInt(t1.split(':')[1]);
+            const m2 = parseInt(t2.split(':')[0])*60 + parseInt(t2.split(':')[1]);
+            const diff = m2 - m1;
+            if (diff > 0) {
+              const h = Math.floor(diff/60), m = diff%60;
+              return (h > 0 ? h+' ชม.' : '') + (m > 0 ? (h>0?' ':'')+m+' นาที' : '');
+            }
+          }
+          return (leave.days || 0) + ' วัน';
+        }
+        if (leave.is_half_day === 'true' || leave.is_half_day === true) return '0.5 วัน (ครึ่งวัน)';
+        return (leave.days || 0) + ' วัน';
+      }
+      document.getElementById('leave-days').textContent = formatLeaveDays(leave);
+      document.getElementById('leave-reason').textContent = leave.reason || '—';
+
+      const rowAttachment = document.getElementById('row-attachment');
+      const leaveAttachment = document.getElementById('leave-attachment');
+      if (leave.certificate_file_data && leave.certificate_file_data !== 'null' && leave.certificate_file_data !== '') {
+        rowAttachment.style.display = 'flex';
+        leaveAttachment.innerHTML = `
+          <a href="${leave.certificate_file_data}" target="_blank" style="color: #4f46e5; text-decoration: underline; font-weight: 600; font-size: 13px;">
+            ดูไฟล์: ${leave.certificate_file_name || 'คลิกที่นี่'} ↗
+          </a>
+        `;
+      } else {
+        rowAttachment.style.display = 'none';
+      }
+
+      show('screen-main');
+    } catch (e) {
+      show('screen-error');
+      document.getElementById('error-msg').textContent = 'ดึงข้อมูลไม่ได้: ' + e.message;
+    }
+  }
+
+  async function doAction(action) {
+    const note = document.getElementById('manager-note').value.trim();
+
+    if (action === 'reject' && !note) {
+      document.getElementById('manager-note').focus();
+      document.getElementById('manager-note').style.borderColor = '#ef4444';
+      document.getElementById('manager-note').placeholder = '⚠️ กรุณากรอกเหตุผลในการปฏิเสธ';
+      return;
+    }
+    document.getElementById('manager-note').style.borderColor = '';
+
+    document.getElementById('btn-group').style.display = 'none';
+    document.getElementById('loading-action').style.display = 'block';
+
+    try {
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: action === 'approve' ? 'approveLeave' : 'rejectLeave',
+          data: { leaveId, note }
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        mode: 'no-cors',
+        redirect: 'follow'
+      });
+
+      // แสดงผลสำเร็จ (no-cors ไม่มี response body)
+      show('screen-success');
+      if (action === 'approve') {
+        document.getElementById('result-icon').textContent = '✅';
+        document.getElementById('result-title').textContent = 'อนุมัติแล้ว!';
+        document.getElementById('result-desc').textContent = 'บันทึกเรียบร้อย ระบบจะแจ้งพนักงานต่อไป';
+        document.getElementById('screen-success').classList.remove('fail');
+        document.getElementById('screen-success').classList.add('success');
+      } else {
+        document.getElementById('result-icon').textContent = '❌';
+        document.getElementById('result-title').textContent = 'ปฏิเสธแล้ว';
+        document.getElementById('result-desc').textContent = 'บันทึกเรียบร้อย ระบบจะแจ้งพนักงานต่อไป';
+        document.getElementById('screen-success').classList.remove('success');
+        document.getElementById('screen-success').classList.add('fail');
+      }
+    } catch (e) {
+      document.getElementById('btn-group').style.display = 'flex';
+      document.getElementById('loading-action').style.display = 'none';
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    }
+  }
+
+  loadLeave();
+</script>
+</body>
+</html>

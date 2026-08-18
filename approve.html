@@ -414,7 +414,8 @@
       const result = await resp.json();
       const data = result.data || result;
       const leaves = data.leaves || [];
-      const leave = leaves.find(l => String(l.id) === String(leaveId));
+      const cleanId = x => String(x || '').replace(/,/g, '').trim();
+      const leave = leaves.find(l => cleanId(l.id) === cleanId(leaveId));
 
       if (!leave) { show('screen-error'); document.getElementById('error-msg').textContent = 'ไม่พบใบลา ID: ' + leaveId; return; }
 

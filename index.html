@@ -1610,7 +1610,7 @@
         const uploadResp = await callApi('uploadFile', { data: fileData, name: `leave_retro_${currentUser.username}_${id}_${Date.now()}.${ext}` });
         if (uploadResp && uploadResp.success) {
           const leaves = getLeaves();
-          const idx = leaves.findIndex(l => String(l.id) === String(id));
+          const idx = leaves.findIndex(l => cleanId(l.id) === cleanId(id));
           if (idx !== -1) {
             leaves[idx].certificate_file_name = file.name;
             leaves[idx].certificate_file_data = uploadResp.url;
@@ -1751,6 +1751,7 @@
     }
 
     let currentUser = null, currentFilter = 'all', searchQuery = '', currentPage = 1, pendingId = null, pendingFileData = null, pendingFileName = '';
+    const cleanId = x => String(x || '').replace(/,/g, '').trim();
     const PAGE_SIZE = 5;
 
     // ─── แสดง overlay loading ───
@@ -2441,7 +2442,7 @@
 
     function openApprove(id) {
       pendingId = id;
-      const l = getLeaves().find(x => x.id === id);
+      const l = getLeaves().find(x => cleanId(x.id) === cleanId(id));
       document.getElementById('approve-info').textContent = l ? l.employee_name+' · '+l.leave_type+' · '+formatDate(l.start_date) : '';
       document.getElementById('approver-name').value = currentUser.displayName;
       document.getElementById('approve-modal').classList.remove('hidden');
@@ -2451,7 +2452,7 @@
       const name = document.getElementById('approver-name').value.trim();
       if (!name) { showToast('กรุณาใส่ชื่อผู้อนุมัติ', 'error'); return; }
       const leaves = getLeaves();
-      const idx = leaves.findIndex(l => String(l.id) === String(pendingId));
+      const idx = leaves.findIndex(l => cleanId(l.id) === cleanId(pendingId));
       if (idx !== -1) {
         leaves[idx].status = 'อนุมัติแล้ว';
         leaves[idx].manager_name = name;
@@ -2476,7 +2477,7 @@
 
     function openReject(id) {
       pendingId = id;
-      const l = getLeaves().find(x => x.id === id);
+      const l = getLeaves().find(x => cleanId(x.id) === cleanId(id));
       document.getElementById('reject-info').textContent = l ? l.employee_name+' · '+l.leave_type+' · '+formatDate(l.start_date) : '';
       document.getElementById('reject-reason').value = '';
       document.getElementById('reject-modal').classList.remove('hidden');
@@ -2486,7 +2487,7 @@
       const reason = document.getElementById('reject-reason').value.trim();
       if (!reason) { showToast('กรุณาใส่เหตุผลที่ปฏิเสธ', 'error'); return; }
       const leaves = getLeaves();
-      const idx = leaves.findIndex(l => String(l.id) === String(pendingId));
+      const idx = leaves.findIndex(l => cleanId(l.id) === cleanId(pendingId));
       if (idx !== -1) {
         leaves[idx].status = 'ปฏิเสธ';
         leaves[idx].reject_reason = reason;
@@ -2577,7 +2578,7 @@
       const l = pendingNotify.shift();
       if (l) {
         const leaves = getLeaves();
-        const idx = leaves.findIndex(x => x.id === l.id);
+        const idx = leaves.findIndex(x => cleanId(x.id) === cleanId(l.id));
         if (idx !== -1) {
           leaves[idx].is_seen = true;
           await saveLeaves(leaves);
@@ -2792,7 +2793,7 @@
     }
 
     function viewAttachment(id) {
-      const l = getLeaves().find(x => String(x.id) === String(id));
+      const l = getLeaves().find(x => cleanId(x.id) === cleanId(id));
       if (!l || !l.certificate_file_data) { showToast('ไม่พบไฟล์แนบ', 'error'); return; }
       const content = document.getElementById('preview-content');
       const modal = document.getElementById('preview-modal');
@@ -2855,7 +2856,7 @@
     }
 
     function printLeave(id) {
-      const l = getLeaves().find(x => String(x.id) === String(id));
+      const l = getLeaves().find(x => cleanId(x.id) === cleanId(id));
       if (!l) { showToast('ไม่พบข้อมูลใบลา', 'error'); return; }
       if (l.status !== 'อนุมัติแล้ว') { showToast('สามารถพิมพ์ได้เฉพาะใบลาที่ได้รับการอนุมัติแล้วเท่านั้น', 'error'); return; }
       const days = calcDays(l);
@@ -3012,7 +3013,7 @@
     async function cancelLeave(id) {
       if (!confirm('ยืนยันที่จะยกเลิกใบลานี้?')) return;
       const leaves = getLeaves();
-      const idx = leaves.findIndex(l => String(l.id) === String(id));
+      const idx = leaves.findIndex(l => cleanId(l.id) === cleanId(id));
       if (idx !== -1) {
         leaves.splice(idx, 1);
         await saveLeaves(leaves);

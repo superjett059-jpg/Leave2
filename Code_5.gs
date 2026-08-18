@@ -122,8 +122,9 @@ function doPost(e) {
 function isLineEnabled(ss) {
   try {
     const config = getSheetData(ss, 'Config')[0];
-    if (!config) return true;
-    return config.lineNotifications !== false && config.lineNotifications !== 'false';
+    if (!config || config.lineNotifications === undefined || config.lineNotifications === null) return true;
+    const val = String(config.lineNotifications).toLowerCase();
+    return val !== 'false';
   } catch (err) {
     return true;
   }
@@ -280,7 +281,16 @@ function setSheetData(ss, sn, da) {
   if (!s) s = ss.insertSheet(sn);
   s.clear();
   if (!da || da.length === 0) return;
-  const k = Object.keys(da[0]);
+  
+  // รวบรวมหัวตาราง (keys) ทั้งหมดจากทุกแถวข้อมูล
+  const keysSet = {};
+  da.forEach(function(o) {
+    Object.keys(o).forEach(function(key) {
+      keysSet[key] = true;
+    });
+  });
+  const k = Object.keys(keysSet);
+  
   s.appendRow(k);
   const r = da.map(o => k.map(x => {
     const v = o[x];

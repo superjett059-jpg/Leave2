@@ -1667,9 +1667,12 @@
     function getLeaves() { return _cache.leaves || []; }
     function getConfig() {
       const c = _cache.config || { workdays: [1,2,3,4,5,6], holidays: [], signatures: [], pendingHolidays: [], lineNotifications: true };
-      if (c.lineNotifications === 'false') c.lineNotifications = false;
-      if (c.lineNotifications === 'true') c.lineNotifications = true;
-      if (c.lineNotifications === undefined || c.lineNotifications === null) c.lineNotifications = true;
+      if (c.lineNotifications !== undefined && c.lineNotifications !== null) {
+        const valStr = String(c.lineNotifications).toLowerCase();
+        c.lineNotifications = valStr !== 'false';
+      } else {
+        c.lineNotifications = true;
+      }
       
       // Parse stringified fields from Google Sheets if necessary
       if (typeof c.workdays === 'string') {

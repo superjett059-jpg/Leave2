@@ -986,6 +986,16 @@
             </details>
 
 
+            <div class="mb-6 p-4 bg-purple-50/50 rounded-xl border border-purple-100">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="settings-line-notifications" class="w-5 h-5 accent-purple-600 rounded">
+                <div>
+                  <span class="text-sm font-semibold text-gray-800 block">เปิดการแจ้งเตือน LINE</span>
+                  <span class="text-xs text-gray-500">ติ๊กถูกเพื่อส่งข้อความแจ้งเตือนใบลาและผลการพิจารณาไปยังผู้จัดการและพนักงานผ่านไลน์</span>
+                </div>
+              </label>
+            </div>
+
             <div class="mb-6 mt-6">
 
               <h3 class="font-semibold text-gray-700 mb-3 text-sm">วันทำงานปกติ</h3>
@@ -1656,7 +1666,10 @@
     function getUsers()  { return _cache.users  || []; }
     function getLeaves() { return _cache.leaves || []; }
     function getConfig() {
-      const c = _cache.config || { workdays: [1,2,3,4,5,6], holidays: [], signatures: [], pendingHolidays: [] };
+      const c = _cache.config || { workdays: [1,2,3,4,5,6], holidays: [], signatures: [], pendingHolidays: [], lineNotifications: true };
+      if (c.lineNotifications === 'false') c.lineNotifications = false;
+      if (c.lineNotifications === 'true') c.lineNotifications = true;
+      if (c.lineNotifications === undefined || c.lineNotifications === null) c.lineNotifications = true;
       
       // Parse stringified fields from Google Sheets if necessary
       if (typeof c.workdays === 'string') {
@@ -2352,7 +2365,8 @@
       leaves.push(newLeave);
       await saveLeaves(leaves);
 
-      if (initialStatus === 'รอการอนุมัติ') {
+      const c = getConfig();
+      if (initialStatus === 'รอการอนุมัติ' && c.lineNotifications !== false) {
         callApi('notifyLine', { leave: newLeave });
       }
 
@@ -3065,6 +3079,7 @@
         if (wd) wd.classList.remove('hidden');
         document.getElementById('btn-save-settings').classList.remove('hidden');
       }
+      document.getElementById('settings-line-notifications').checked = c.lineNotifications !== false;
       document.querySelectorAll('#workday-checkboxes input').forEach(cb => {
         cb.checked = c.workdays.includes(parseInt(cb.value));
       });
@@ -3205,6 +3220,7 @@
     async function saveSettings() {
       const c = getConfig();
       c.workdays = Array.from(document.querySelectorAll('#workday-checkboxes input:checked')).map(cb => parseInt(cb.value));
+      c.lineNotifications = document.getElementById('settings-line-notifications').checked;
       await saveConfig(c);
       showToast('บันทึกการตั้งค่าเรียบร้อย', 'success');
       if (currentUser.role !== 'manager') renderDashboard();
